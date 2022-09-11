@@ -1,1 +1,168 @@
+Loading dataset and dependencies
 
+from sklearn.datasets import load_breast_cancer
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import seaborn as sns
+
+%matplotlib inline
+
+Read in breast cancer data
+
+
+breast_cancer = load_breast_cancer()
+
+print(breast_cancer.DESCR)
+
+
+Load data to dataframe
+
+data_frame= pd.DataFrame(breast_cancer.data, columns= breast_cancer.feature_names)
+
+data_frame.head()
+
+Checking the Sample and Target Sizes
+
+data_frame['label'] = breast_cancer.target
+
+data_frame.tail()
+
+breast_cancer.data.shape
+
+breast_cancer.target.shape
+
+data_frame.info()
+
+Checking distribution of target variable
+
+data_frame['label'].value_counts()
+
+
+
+1 --  Benign
+0 --  Malignant
+
+
+
+data_frame.groupby('label').mean()
+
+Seperating features and target
+
+X = data_frame.drop(columns= 'label', axis= 1)
+y = data_frame['label']
+
+
+print(X)
+
+print(y)
+
+Splitting the Data for Training and Testing
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=2)
+
+print(X.shape, X_train.shape, X_test.shape)
+
+Model training
+
+Logistic Regression
+
+model = LogisticRegression()
+
+Training model with training data
+
+model.fit(X_train, y_train)
+
+Model evaluation - accuracy score
+
+Training data accuracy
+
+X_train_prediction = model.predict(X_train)
+train_data_acc = accuracy_score(y_train, X_train_prediction)
+
+print('Accuracy of training data = ', train_data_acc)
+
+Test data accuracy
+
+X_test_prediction = model.predict(X_test)
+test_data_acc = accuracy_score(y_test, X_test_prediction)
+
+print('Accuracy of test data = ', test_data_acc)
+
+Predicting system
+
+input_data =(10.17,14.88,64.55,311.9,0.1134,0.08061,0.01084,0.0129,0.2743,0.0696,0.5158,1.441,3.312,34.62,0.007514,0.01099,0.007665,0.008193,0.04183,0.005953,11.02,17.45,69.86,368.6,0.1275,0.09866,0.02168,0.02579,0.3557,0.0802)
+
+input_data_as_numpy_array = np.asarray(input_data)
+
+input_data_reshape = input_data_as_numpy_array.reshape(1, -1)
+
+prediction = model.predict(input_data_reshape)
+print(prediction)
+
+if (prediction[0] == 0):
+  print('The breast cancer is malignant')
+
+else:
+  print('The breast cancer is benign')
+
+input_data =(15.1,22.02,97.26,712.8,0.09056,0.07081,0.05253,0.03334,0.1616,0.05684,0.3105,0.8339,2.097,29.91,0.004675,0.0103,0.01603,0.009222,0.01095,0.001629,18.1,31.69,117.7,1030,0.1389,0.2057,0.2712,0.153,0.2675,0.07873)
+
+input_data_as_numpy_array = np.asarray(input_data)
+
+input_data_reshape = input_data_as_numpy_array.reshape(1, -1)
+
+prediction = model.predict(input_data_reshape)
+print(prediction)
+
+if (prediction[0] == 0):
+  print('The breast cancer is malignant')
+
+else:
+  print('The breast cancer is benign')
+
+Estimator method score
+
+estimators = {
+    'GaussianNB': GaussianNB(),
+    'KNeighborsClassifier': KNeighborsClassifier(), 
+    'LogisticRegression': LogisticRegression(solver='lbfgs', multi_class='ovr', max_iter=10000),
+    'SVC': SVC(gamma='scale')}
+
+for estimator_name, estimator_object in estimators.items():
+  kfold= kfold = KFold(n_splits=10, random_state=11, shuffle=True)
+  scores = cross_val_score(estimator= estimator_object, X=breast_cancer.data, 
+          y=breast_cancer.target, cv=kfold)
+  print(f'{estimator_name:>20}: ' + 
+        f'mean accuracy={scores.mean():.2%}: ' +
+        f'standard deviation= {scores.std():.2%}')
+
+Confusion Matrix
+
+model = LogisticRegression()
+model.fit(X_train, y_train)
+pred = model.predict(X_test)
+
+confusion= confusion_matrix(y_test, pred)
+print(confusion)
+
+Visualizing confusion matrix
+
+confusion_df = pd.DataFrame(confusion, index=range(2), columns= range(2))
+
+axes = sns.heatmap(confusion_df, annot= True, cmap= 'nipy_spectral_r')
+
+Classification Report
+
+matrix= classification_report(y_test, pred)
+print('Classification report : \n', matrix)
